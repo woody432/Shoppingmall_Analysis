@@ -8,7 +8,19 @@ public class Users
 {
     @Id
     private String user_id;
+
+    public Users()
+    {
+    }
+
     private String password;
+
+    public Users(String gender, float height, float weight) {
+        this.gender = gender;
+        this.height = height;
+        this.weight = weight;
+    }
+
     private String gender;
     private float height;
     private float weight;
