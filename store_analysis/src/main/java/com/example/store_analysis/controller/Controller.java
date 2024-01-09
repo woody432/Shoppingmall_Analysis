@@ -1,8 +1,6 @@
 package com.example.store_analysis.controller;
 
-import com.example.store_analysis.domain.Product;
-import com.example.store_analysis.domain.Review;
-import com.example.store_analysis.domain.Users;
+import com.example.store_analysis.domain.*;
 import com.example.store_analysis.naverapi.Keyword;
 import com.example.store_analysis.naverapi.NaverAPI;
 import com.example.store_analysis.naverapi.Category;
@@ -10,12 +8,14 @@ import com.example.store_analysis.recommedation.RecommendationSystem;
 import com.example.store_analysis.repository.ProductRepository;
 import com.example.store_analysis.repository.UsersRepository;
 import com.example.store_analysis.repository.ReviewRepository;
+import com.fasterxml.jackson.core.JsonParser;
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,10 +29,10 @@ public class Controller {
 
 
     @Autowired
-    public Controller(UsersRepository usersRepository, ReviewRepository reviewRepository,ProductRepository productRepository) {
+    public Controller(UsersRepository usersRepository, ReviewRepository reviewRepository, ProductRepository productRepository) {
         this.usersRepository = usersRepository;
         this.reviewRepository = reviewRepository;
-        this.productRepository=productRepository;
+        this.productRepository = productRepository;
     }
 
     @GetMapping("/users")
@@ -118,6 +118,36 @@ public class Controller {
         return p;
     }
 
+    @PostMapping("/effectiveness")
+    @ResponseBody
+    public StoreNameResponse handelEffectiveness(@RequestBody ProductSearchRequest request)
+    {
+
+        List<Product> productList = productRepository.findByProductName(request.getProductName());
+
+        Map<String, Integer> storeFrequency = new HashMap<>();
+        String mostFrequentStore = null;
+        int maxFrequency = 0;
+
+        for (Product product : productList) {
+            String store = product.getStore();
+            int frequency = storeFrequency.getOrDefault(store, 0) + 1;
+            storeFrequency.put(store, frequency);
+
+            if (frequency > maxFrequency) {
+                mostFrequentStore = store;
+                maxFrequency = frequency;
+            }
+        }
+
+        System.out.println("Most frequent store: " + mostFrequentStore);
+
+
+        // StoreNameResponse 객체를 생성하여 반환
+        StoreNameResponse response = new StoreNameResponse();
+        response.setStoreName(mostFrequentStore);
+        return response;
+    }
 
     // 주어진 값을 가장 가까운 multipleOf에 반올림하는 메서드
     private double roundToNearestMultipleOf5(double value, int multipleOf) {
